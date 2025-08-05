@@ -107,7 +107,9 @@ router.post('/', (req, res) => {
     description, 
     issue_date, 
     expiry_date, 
-    file_path, 
+    file_data, 
+    file_name,
+    file_type,
     notes 
   } = req.body;
   
@@ -146,11 +148,11 @@ router.post('/', (req, res) => {
     
     function createDocument() {
       const query = `
-        INSERT INTO documents (shop_id, employee_id, document_type, document_number, title, description, issue_date, expiry_date, file_path, notes) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO documents (shop_id, employee_id, document_type, document_number, title, description, issue_date, expiry_date, file_data, file_name, file_type, notes) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
       
-      db.run(query, [shop_id, employee_id, document_type, document_number, title, description, issue_date, expiry_date, file_path, notes], function(err) {
+      db.run(query, [shop_id, employee_id, document_type, document_number, title, description, issue_date, expiry_date, file_data, file_name, file_type, notes], function(err) {
         if (err) {
           console.error('Lỗi khi tạo document:', err);
           return res.status(500).json({ error: 'Lỗi server' });
@@ -166,7 +168,9 @@ router.post('/', (req, res) => {
           description,
           issue_date,
           expiry_date,
-          file_path,
+          file_data,
+          file_name,
+          file_type,
           notes,
           message: 'Giấy tờ đã được tạo thành công'
         });

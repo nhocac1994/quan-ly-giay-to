@@ -22,21 +22,11 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// Cấu hình multer cho file upload
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, uploadsDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
+// Cấu hình multer cho file upload (memory storage cho Render.com)
 const upload = multer({ 
-  storage: storage,
+  storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10 * 1024 * 1024 // Giới hạn 10MB
+    fileSize: 5 * 1024 * 1024 // Giới hạn 5MB cho memory storage
   },
   fileFilter: function (req, file, cb) {
     // Chấp nhận các loại file phổ biến
@@ -157,22 +147,26 @@ app.use('/api/employees', authenticateToken, require('./routes/employees'));
 app.use('/api/documents', authenticateToken, require('./routes/documents'));
 app.use('/api/users', authenticateToken, require('./routes/users'));
 
-// File upload route (protected)
+// File upload route (protected) - Lưu Base64 vào database
 app.post('/api/upload', authenticateToken, upload.single('file'), (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'Không có file nào được tải lên' });
     }
 
-    const fileUrl = `/uploads/${req.file.filename}`;
+    // Chuyển file thành Base64
+    const fileBuffer = req.file.buffer;
+    const base64Data = fileBuffer.toString('base64');
+    const dataUrl = `data:${req.file.mimetype};base64,${base64Data}`;
+
     res.json({
       success: true,
       file: {
-        filename: req.file.filename,
+        filename: req.file.originalname,
         originalname: req.file.originalname,
         mimetype: req.file.mimetype,
         size: req.file.size,
-        url: fileUrl
+        data: dataUrl // Base64 data để lưu vào database
       }
     });
   } catch (error) {
