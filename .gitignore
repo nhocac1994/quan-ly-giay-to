@@ -18,8 +18,8 @@ dist/
 
 # Database
 *.db
-*.sqlite
-*.sqlite3
+# *.sqlite
+# *.sqlite3
 
 # Logs
 logs
