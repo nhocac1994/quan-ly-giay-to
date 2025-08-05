@@ -13,8 +13,18 @@ const PORT = process.env.PORT || 10000;
 
 // Middleware
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
+// Log request size
+app.use((req, res, next) => {
+  const contentLength = req.headers['content-length'];
+  if (contentLength) {
+    console.log(`Request size: ${(contentLength / 1024 / 1024).toFixed(2)} MB`);
+  }
+  next();
+});
+
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Tạo thư mục uploads nếu chưa có
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -26,7 +36,7 @@ if (!fs.existsSync(uploadsDir)) {
 const upload = multer({ 
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 5 * 1024 * 1024 // Giới hạn 5MB cho memory storage
+    fileSize: 50 * 1024 * 1024 // Giới hạn 50MB cho memory storage
   },
   fileFilter: function (req, file, cb) {
     // Chấp nhận các loại file phổ biến
@@ -52,6 +62,24 @@ const upload = multer({
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    return res.status(400).json({ error: 'Invalid JSON' });
+  }
+  
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(413).json({ error: 'File quá lớn. Giới hạn 50MB.' });
+  }
+  
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({ error: 'Request quá lớn. Giới hạn 50MB.' });
+  }
+  
+  console.error('Error:', err);
+  res.status(500).json({ error: 'Lỗi server' });
+});
 
 // JWT Secret
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
