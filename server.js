@@ -14,14 +14,7 @@ const PORT = process.env.PORT || 10000;
 // Middleware
 app.use(cors());
 
-// Log request size
-app.use((req, res, next) => {
-  const contentLength = req.headers['content-length'];
-  if (contentLength) {
-    console.log(`Request size: ${(contentLength / 1024 / 1024).toFixed(2)} MB`);
-  }
-  next();
-});
+
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
