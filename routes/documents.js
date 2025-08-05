@@ -98,6 +98,8 @@ router.get('/types/list', (req, res) => {
 
 // Tạo document mới
 router.post('/', (req, res) => {
+  console.log('Received document data:', req.body);
+  
   const { 
     shop_id, 
     employee_id, 
@@ -152,7 +154,10 @@ router.post('/', (req, res) => {
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
       
-      db.run(query, [shop_id, employee_id, document_type, document_number, title, description, issue_date, expiry_date, file_data, file_name, file_type, notes], function(err) {
+      const params = [shop_id, employee_id, document_type, document_number, title, description, issue_date, expiry_date, file_data, file_name, file_type, notes];
+      console.log('Inserting with params:', params);
+      
+      db.run(query, params, function(err) {
         if (err) {
           console.error('Lỗi khi tạo document:', err);
           return res.status(500).json({ error: 'Lỗi server' });
